@@ -74,16 +74,6 @@ map.on('locationerror', function(e) {
 
 // Search Feature
 let searchDebounce;
-let searchInterrupted = false;
-
-searchInput.addEventListener('focus', (e) => {
-    // If trust is low and we haven't already interrupted this specific search attempt
-    if (state.trustLevel < 4 && !searchInterrupted) {
-        e.target.blur(); // Remove focus immediately
-        startPsyCheck("SEARCH PROTOCOL"); // Trigger popup
-        return;
-    }
-});
 
 searchInput.addEventListener('input', (e) => {
     clearTimeout(searchDebounce);
@@ -118,15 +108,31 @@ btnSearch.addEventListener('click', () => {
     searchInput.dispatchEvent(new Event('input'));
 });
 
+// Used to store the selected destination if interrupted by the popup
+let pendingDestination = null;
+
 function selectDestination(lat, lng, name) {
     searchResults.classList.add('hidden');
     searchInput.value = name;
     
-    const latlng = L.latLng(lat, lng);
+    pendingDestination = { lat, lng, name };
+    
+    if (state.trustLevel < 4) {
+        // Trigger popup instead of placing marker immediately
+        startPsyCheck("DESTINATION PROTOCOL");
+    } else {
+        finalizeDestination();
+    }
+}
+
+function finalizeDestination() {
+    if (!pendingDestination) return;
+    
+    const latlng = L.latLng(pendingDestination.lat, pendingDestination.lng);
     state.end = latlng;
     if (state.endMarker) map.removeLayer(state.endMarker);
     state.endMarker = L.marker(state.end, {icon: endIcon}).addTo(map);
-    uiCoordsEnd.textContent = `${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`;
+    uiCoordsEnd.textContent = `${parseFloat(pendingDestination.lat).toFixed(4)}, ${parseFloat(pendingDestination.lng).toFixed(4)}`;
     
     // Fit map to show both markers
     if (state.start) {
@@ -136,6 +142,12 @@ function selectDestination(lat, lng, name) {
     }
     
     btnNavigate.disabled = false;
+    pendingDestination = null;
+    
+    // Auto-start route calculation
+    setTimeout(() => {
+        btnNavigate.click();
+    }, 600);
 }
 
 // Map Click Fallback Handler for Start/End (If geolocation fails or user prefers clicking)
@@ -192,26 +204,9 @@ function updateTrust(delta) {
 
 // Navigation Initiation
 btnNavigate.addEventListener('click', () => {
-    // Since verification happens at the search stage now, we just proceed to routing.
-    // We can still simulate the paranoid bypass if they've earned high trust.
-    if (state.trustLevel >= 4) {
-        trustModal.classList.remove('hidden');
-        setTimeout(() => {
-            trustModal.classList.add('hidden');
-            setParanoidMode(false);
-            calculateRoute();
-        }, 2000);
-    } else {
-        // Technically this branch shouldn't hit if they passed the search check, 
-        // but just in case trust degraded.
-        if (state.trustLevel < 4 && !searchInterrupted) {
-             startPsyCheck("NAVIGATION PROTOCOL");
-        } else {
-             setParanoidMode(false);
-             calculateRoute();
-             searchInterrupted = false; // Reset for next time
-        }
-    }
+    // Proceed directly to routing since the verification happened at destination selection
+    setParanoidMode(false);
+    calculateRoute();
 });
 
 // Psychological Check Logic
@@ -286,13 +281,12 @@ function successPsyCheck() {
     setTimeout(() => {
         psyModal.classList.add('hidden');
         
-        // If we interrupted a search, return focus to it
-        if (document.activeElement !== searchInput) {
-             searchInterrupted = true; // Mark that they've passed the search block
-             searchInput.focus();
+        // Resume placing the destination and triggering the route automatically
+        if (pendingDestination) {
+            finalizeDestination();
         } else {
-             setParanoidMode(false); // Switch to normal mode (Correct Route)
-             calculateRoute();
+            setParanoidMode(false); // Switch to normal mode (Correct Route)
+            calculateRoute();
         }
     }, 2500);
 }
