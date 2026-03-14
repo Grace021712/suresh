@@ -1,85 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paranoid Navigation System</title>
+    <title>Paranoid GPS Navigation</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Leaflet Routing Machine CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css" />
-    <!-- Google Fonts for Monospace UI -->
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for premium look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
 </head>
-
 <body>
-    <!-- HUD Overlay -->
-    <div id="hud-overlay">
-        <div class="hud-header">
-            <h1>SYSTEM STATUS: <span id="trust-status" class="status-warning">PARANOID</span></h1>
-            <div class="trust-bar-container">
-                <div>TRUST LEVEL: <span id="trust-level-text">0</span>%</div>
-                <div class="trust-bar">
-                    <div id="trust-fill" style="width: 0%;"></div>
+    <div id="app">
+        <div id="sidebar">
+            <h1 class="brand">PARANOID GPS</h1>
+            <div class="status-panel">
+                <div class="status-item">
+                    <span>SYSTEM MODE:</span>
+                    <span id="mode-indicator" class="mode-paranoid">PARANOID</span>
+                </div>
+                <div class="status-item">
+                    <span>TRUST LEVEL:</span>
+                    <div class="trust-bar-container">
+                        <div id="trust-bar" class="trust-bar" style="width: 0%;"></div>
+                    </div>
                 </div>
             </div>
+
+            <div class="controls">
+                <p class="instructions">Search for your <b>Destination</b>. Navigation AI will assess threat levels.</p>
+                
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Enter destination..." autocomplete="off">
+                    <button id="btn-search">SEARCH</button>
+                </div>
+                
+                <ul id="search-results" class="hidden"></ul>
+
+                <div class="waypoints">
+                    <div class="waypoint">
+                        <span class="dot start-dot"></span>
+                        <span id="start-coords">Locating User...</span>
+                    </div>
+                    <div class="waypoint">
+                        <span class="dot end-dot"></span>
+                        <span id="end-coords">Awaiting Input...</span>
+                    </div>
+                </div>
+                <button id="btn-navigate" disabled>INITIATE NAVIGATION</button>
+                <button id="btn-clear" class="secondary">RESET INTERFACE</button>
+            </div>
+            
+            <div id="route-info" class="hidden">
+                <h3>ROUTE DATA</h3>
+                <div class="route-stat">Distance: <span id="route-dist">--</span></div>
+                <div class="route-stat">Est. Time: <span id="route-time">--</span></div>
+                <div id="paranoid-warning" class="warning-text">⚠️ ALERTO: Deflecting from optimal path to avoid high-risk zones. Route multiplied for evasion.</div>
+            </div>
         </div>
 
-        <!-- Navigation Panel (Manual Inputs) -->
-        <div id="nav-panel" class="tracker-panel">
-            <h3>SET COORDINATES</h3>
-            <input type="text" id="start-input" placeholder="Current Location (City or Area)..." />
-            <input type="text" id="dest-input" placeholder="Destination (City or Area)..." />
-            <button id="set-route-btn">CALCULATE ROUTE</button>
+        <div id="map"></div>
+
+        <!-- Psychological Check Modal -->
+        <div id="psy-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="glitch-wrapper">
+                    <h2 class="glitch" data-text="MENTAL STABILITY CHECK">MENTAL STABILITY CHECK</h2>
+                </div>
+                <!-- <p class="sys-msg">Your stress level appears high. Panicked survivors make poor navigation decisions.</p> -->
+                <div class="ai-warning">
+                    <div class="icon">⚠️</div>
+                    <div class="text">
+                        <strong>WARNING: Elevated user stress detected.</strong><br/>
+                        Panicked survivors compromise stealth routing protocols.
+                    </div>
+                </div>
+                <p class="instruction-text">Please confirm that you are calm enough to continue the journey. <br/><b>Tap the breathing icon 3 times slowly to stabilize navigation.</b><br/> <small>(Maintain at least 1.5 seconds between breaths)</small></p>
+                
+                <div class="breathing-container">
+                    <button id="btn-breathe" class="breathe-btn">
+                        <div class="pulse-ring"></div>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="tap-indicators">
+                    <div class="tap-dot"></div>
+                    <div class="tap-dot"></div>
+                    <div class="tap-dot"></div>
+                </div>
+
+                <div id="modal-feedback" class="feedback">Awaiting synchronization...</div>
+            </div>
         </div>
         
-        <!-- Friend Tracker Panel -->
-        <div id="tracker-panel" class="tracker-panel">
-            <h3>TRACK SURVIVOR SIGNAL</h3>
-            <input type="text" id="friend-name-input" placeholder="Enter Survivor ID..." />
-            <button id="track-friend-btn">INITIATE SCAN</button>
-            <div id="tracked-friends-list"></div>
-        </div>
-
-        <div id="toast-container"></div>
-    </div>
-
-    <!-- Stabilize Button (Hidden initially) -->
-    <button id="stabilize-btn" class="hidden">STABILIZE GPS</button>
-
-    <!-- The Map Container -->
-    <div id="map"></div>
-
-    <!-- Psychological Verification Modal -->
-    <div id="psych-modal" class="modal hidden">
-        <div class="modal-content">
-            <h2 class="alert-text">GPS MENTAL STABILITY CHECK</h2>
-            <p>Your stress level appears high. Panicked survivors make poor navigation decisions.</p>
-            <p>Tap the breathing icon <span class="highlight">three times slowly</span> (>1s apart) to stabilize
-                navigation.</p>
-
-            <div id="breathing-icon" class="pulse">
-                <div class="inner-circle"></div>
-            </div>
-
-            <p id="psych-message" class="system-msg">Awaiting verification...</p>
-            <div class="tap-indicators">
-                <div class="tap-dot"></div>
-                <div class="tap-dot"></div>
-                <div class="tap-dot"></div>
+        <!-- Trust Skipped Modal -->
+        <div id="trust-modal" class="modal hidden">
+            <div class="modal-content success-box">
+                <h2>TRUST LEVEL SUFFICIENT</h2>
+                <div class="ai-warning success">
+                    <div class="icon">✔️</div>
+                    <div class="text">
+                        GPS recognizes previous calm behavior.<br/>
+                        Mental stability pre-verified.
+                    </div>
+                </div>
+                <p>Navigation starting immediately.</p>
+                <div class="loading-bar"></div>
             </div>
         </div>
+
     </div>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Leaflet Routing Machine JS -->
-    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-    <!-- Custom JS -->
     <script src="app.js"></script>
 </body>
-
 </html>
