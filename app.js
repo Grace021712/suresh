@@ -74,6 +74,17 @@ map.on('locationerror', function(e) {
 
 // Search Feature
 let searchDebounce;
+let searchInterrupted = false;
+
+searchInput.addEventListener('focus', (e) => {
+    // If trust is low and we haven't already interrupted this specific search attempt
+    if (state.trustLevel < 4 && !searchInterrupted) {
+        e.target.blur(); // Remove focus immediately
+        startPsyCheck("SEARCH PROTOCOL"); // Trigger popup
+        return;
+    }
+});
+
 searchInput.addEventListener('input', (e) => {
     clearTimeout(searchDebounce);
     const query = e.target.value;
@@ -181,28 +192,30 @@ function updateTrust(delta) {
 
 // Navigation Initiation
 btnNavigate.addEventListener('click', () => {
-    // If trust is high (>= 4), skip the check
+    // Since verification happens at the search stage now, we just proceed to routing.
+    // We can still simulate the paranoid bypass if they've earned high trust.
     if (state.trustLevel >= 4) {
         trustModal.classList.remove('hidden');
         setTimeout(() => {
             trustModal.classList.add('hidden');
             setParanoidMode(false);
             calculateRoute();
-            
-            // Paranoid mode will still return eventually to keep user engaged
-            setTimeout(() => {
-                if (!state.isParanoid) {
-                    setParanoidMode(true);
-                }
-            }, 60000); // 1 minute of optimal routing
         }, 2000);
     } else {
-        startPsyCheck();
+        // Technically this branch shouldn't hit if they passed the search check, 
+        // but just in case trust degraded.
+        if (state.trustLevel < 4 && !searchInterrupted) {
+             startPsyCheck("NAVIGATION PROTOCOL");
+        } else {
+             setParanoidMode(false);
+             calculateRoute();
+             searchInterrupted = false; // Reset for next time
+        }
     }
 });
 
 // Psychological Check Logic
-function startPsyCheck() {
+function startPsyCheck(context = "NAVIGATION") {
     state.tapTimestamps = [];
     updateTapUI();
     modalFeedback.textContent = 'Awaiting synchronization...';
@@ -272,9 +285,15 @@ function successPsyCheck() {
     
     setTimeout(() => {
         psyModal.classList.add('hidden');
-        setParanoidMode(false); // Switch to normal mode (Correct Route)
-        calculateRoute();
-        // Removed the timer that reverted to Paranoid Mode so the optimal route stays visible.
+        
+        // If we interrupted a search, return focus to it
+        if (document.activeElement !== searchInput) {
+             searchInterrupted = true; // Mark that they've passed the search block
+             searchInput.focus();
+        } else {
+             setParanoidMode(false); // Switch to normal mode (Correct Route)
+             calculateRoute();
+        }
     }, 2500);
 }
 
