@@ -1,0 +1,392 @@
+:root {
+    --bg-color: #0d0d0d;
+    --text-primary: #33ff33;
+    /* Neon green */
+    --text-warning: #ff5500;
+    --text-critical: #ff0000;
+    --border-color: #33ff33;
+    --modal-bg: rgba(10, 20, 10, 0.95);
+    --font-family: 'Share Tech Mono', monospace;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body,
+html {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    overflow: hidden;
+}
+
+/* Map Styling & Dark/Gritty Override */
+#map {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    /* Create a dark, low-visibility aesthetic */
+    filter: invert(100%) hue-rotate(180deg) brightness(80%) contrast(150%) sepia(20%);
+}
+
+/* HUD Overlay */
+#hud-overlay {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    pointer-events: none;
+    /* Let clicks pass through */
+    text-shadow: 0 0 5px var(--text-primary);
+}
+
+.hud-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+}
+
+.status-warning {
+    color: var(--text-warning);
+    animation: blink 2s infinite;
+}
+
+.status-ok {
+    color: var(--text-primary);
+}
+
+.trust-bar-container {
+    width: 250px;
+    font-size: 1.1rem;
+}
+
+.trust-bar {
+    width: 100%;
+    height: 15px;
+    background: #222;
+    border: 1px solid var(--border-color);
+    margin-top: 5px;
+    position: relative;
+}
+
+#trust-fill {
+    height: 100%;
+    background: var(--text-critical);
+    /* start critical */
+    box-shadow: 0 0 10px var(--text-critical);
+    transition: width 0.5s ease-out, background-color 0.5s;
+}
+
+/* Tracker Panel */
+.tracker-panel {
+    margin-top: 20px;
+    background: rgba(10, 20, 10, 0.85);
+    border: 1px solid var(--border-color);
+    padding: 15px;
+    width: 250px;
+}
+
+.tracker-panel h3 {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    color: var(--text-primary);
+    text-shadow: 0 0 5px var(--text-primary);
+}
+
+.tracker-panel input {
+    width: 100%;
+    background: #000;
+    border: 1px solid rgba(51, 255, 51, 0.5);
+    color: var(--text-primary);
+    padding: 8px;
+    font-family: var(--font-family);
+    margin-bottom: 10px;
+    outline: none;
+}
+
+.tracker-panel input:focus {
+    border-color: var(--text-primary);
+    box-shadow: 0 0 5px var(--border-color);
+}
+
+.tracker-panel button {
+    width: 100%;
+    background: #222;
+    color: var(--text-primary);
+    border: 1px solid var(--text-primary);
+    padding: 8px;
+    font-family: var(--font-family);
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+}
+
+.tracker-panel button:hover {
+    background: var(--text-primary);
+    color: #000;
+}
+
+#tracked-friends-list {
+    margin-top: 15px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.friend-item {
+    padding: 8px;
+    border-bottom: 1px solid rgba(51, 255, 51, 0.3);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.friend-item:hover {
+    background: rgba(51, 255, 51, 0.2);
+}
+
+.friend-item .status {
+    font-size: 0.8rem;
+    color: var(--text-warning);
+    margin-top: 4px;
+}
+
+/* Stabilize Button */
+#stabilize-btn {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid var(--text-warning);
+    color: var(--text-warning);
+    padding: 15px 30px;
+    font-family: var(--font-family);
+    font-size: 1.5rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 0 0 15px var(--text-warning);
+    animation: warning-pulse 1.5s infinite;
+}
+
+#stabilize-btn:hover {
+    background: var(--text-warning);
+    color: #000;
+}
+
+/* Modal Styling */
+.modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: var(--modal-bg);
+    border: 2px solid var(--text-warning);
+    padding: 40px;
+    width: 90%;
+    max-width: 600px;
+    text-align: center;
+    box-shadow: 0 0 30px var(--text-warning);
+}
+
+.modal-content h2 {
+    color: var(--text-warning);
+    margin-bottom: 20px;
+    font-size: 2rem;
+    text-shadow: 0 0 10px var(--text-warning);
+}
+
+.modal-content p {
+    font-size: 1.2rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.highlight {
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+/* Breathing Icon */
+#breathing-icon {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid var(--text-warning);
+    margin: 30px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 20px var(--text-warning) inset;
+    transition: transform 0.1s;
+}
+
+#breathing-icon:active {
+    transform: scale(0.9);
+}
+
+.inner-circle {
+    width: 60px;
+    height: 60px;
+    background: var(--text-warning);
+    border-radius: 50%;
+    animation: breathe 4s ease-in-out infinite;
+    box-shadow: 0 0 20px var(--text-warning);
+}
+
+.pulse .inner-circle {
+    animation: breathe 4s ease-in-out infinite;
+}
+
+/* Tap Indicators */
+.tap-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.tap-dot {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #555;
+    border-radius: 50%;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.tap-dot.filled {
+    background: var(--text-primary);
+    border-color: var(--text-primary);
+    box-shadow: 0 0 10px var(--text-primary);
+}
+
+.tap-dot.failed {
+    background: var(--text-critical);
+    border-color: var(--text-critical);
+    box-shadow: 0 0 10px var(--text-critical);
+}
+
+.system-msg {
+    margin-top: 20px;
+    min-height: 30px;
+    font-weight: bold;
+}
+
+/* Animations */
+@keyframes blink {
+
+    0%,
+    49% {
+        opacity: 1;
+    }
+
+    50%,
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes warning-pulse {
+    0% {
+        box-shadow: 0 0 5px var(--text-warning);
+    }
+
+    50% {
+        box-shadow: 0 0 25px var(--text-warning);
+    }
+
+    100% {
+        box-shadow: 0 0 5px var(--text-warning);
+    }
+}
+
+@keyframes breathe {
+
+    0%,
+    100% {
+        transform: scale(0.6);
+        opacity: 0.6;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+}
+
+/* Utils */
+.hidden {
+    display: none !important;
+}
+
+/* Toast container */
+#toast-container {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast {
+    background: rgba(0, 0, 0, 0.8);
+    border-left: 4px solid var(--text-primary);
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    animation: slideIn 0.3s ease-out forwards;
+    box-shadow: 0 0 10px rgba(51, 255, 51, 0.2);
+}
+
+.toast.warning {
+    border-left-color: var(--text-warning);
+    color: var(--text-warning);
+    box-shadow: 0 0 10px rgba(255, 85, 0, 0.2);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Leaflet Overrides for better Dark mode integration */
+.leaflet-container {
+    background: #000;
+}
+
+/* Make routing controls less obtrusive */
+.leaflet-routing-container {
+    background-color: rgba(10, 20, 10, 0.8) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--text-primary) !important;
+    border-radius: 0 !important;
+    filter: invert(100%) hue-rotate(180deg) brightness(80%) contrast(150%) sepia(20%);
+    /* Re-invert text so it looks okay over inverted map */
+}

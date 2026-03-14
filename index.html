@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paranoid Navigation System</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet Routing Machine CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css" />
+    <!-- Google Fonts for Monospace UI -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- HUD Overlay -->
+    <div id="hud-overlay">
+        <div class="hud-header">
+            <h1>SYSTEM STATUS: <span id="trust-status" class="status-warning">PARANOID</span></h1>
+            <div class="trust-bar-container">
+                <div>TRUST LEVEL: <span id="trust-level-text">0</span>%</div>
+                <div class="trust-bar">
+                    <div id="trust-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Panel (Manual Inputs) -->
+        <div id="nav-panel" class="tracker-panel">
+            <h3>SET COORDINATES</h3>
+            <input type="text" id="start-input" placeholder="Current Location (City or Area)..." />
+            <input type="text" id="dest-input" placeholder="Destination (City or Area)..." />
+            <button id="set-route-btn">CALCULATE ROUTE</button>
+        </div>
+        
+        <!-- Friend Tracker Panel -->
+        <div id="tracker-panel" class="tracker-panel">
+            <h3>TRACK SURVIVOR SIGNAL</h3>
+            <input type="text" id="friend-name-input" placeholder="Enter Survivor ID..." />
+            <button id="track-friend-btn">INITIATE SCAN</button>
+            <div id="tracked-friends-list"></div>
+        </div>
+
+        <div id="toast-container"></div>
+    </div>
+
+    <!-- Stabilize Button (Hidden initially) -->
+    <button id="stabilize-btn" class="hidden">STABILIZE GPS</button>
+
+    <!-- The Map Container -->
+    <div id="map"></div>
+
+    <!-- Psychological Verification Modal -->
+    <div id="psych-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 class="alert-text">GPS MENTAL STABILITY CHECK</h2>
+            <p>Your stress level appears high. Panicked survivors make poor navigation decisions.</p>
+            <p>Tap the breathing icon <span class="highlight">three times slowly</span> (>1s apart) to stabilize
+                navigation.</p>
+
+            <div id="breathing-icon" class="pulse">
+                <div class="inner-circle"></div>
+            </div>
+
+            <p id="psych-message" class="system-msg">Awaiting verification...</p>
+            <div class="tap-indicators">
+                <div class="tap-dot"></div>
+                <div class="tap-dot"></div>
+                <div class="tap-dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet Routing Machine JS -->
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    <!-- Custom JS -->
+    <script src="app.js"></script>
+</body>
+
+</html>
